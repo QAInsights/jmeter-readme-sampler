@@ -90,9 +90,10 @@ class InstructionFilesPanelTest {
     }
 
     @Test
-    void createsMissingFilesBesideTheTestPlan() throws Exception {
+    void createsAndSelectsMissingFilesBesideTheTestPlan() throws Exception {
         Path project = Files.createDirectories(tempDir.resolve("project"));
         Path plan = Files.writeString(project.resolve("test.jmx"), "");
+        Files.writeString(project.resolve("CLAUDE.md"), "claude");
         InstructionFilesPanel[] holder = new InstructionFilesPanel[1];
         SwingUtilities.invokeAndWait(() -> holder[0] = new InstructionFilesPanel(
                 new InstructionFileLocator(), new InstructionFileStore(), () -> plan, () -> null));
@@ -100,8 +101,8 @@ class InstructionFilesPanelTest {
         SwingUtilities.invokeAndWait(() -> holder[0].createFile(InstructionFileKind.AGENTS));
 
         assertTrue(Files.exists(project.resolve("AGENTS.md")));
-        assertEquals(1, countEditors(holder[0]));
-        assertEquals(List.of("AGENTS.md — Test plan directory"), tabTitles(holder[0]));
+        assertEquals(2, countEditors(holder[0]));
+        assertEquals("AGENTS.md — Test plan directory", selectedTabTitle(holder[0]));
     }
 
     private static int countEditors(Container container) {
@@ -115,6 +116,11 @@ class InstructionFilesPanelTest {
             }
         }
         return count;
+    }
+
+    private static String selectedTabTitle(Container container) {
+        JTabbedPane tabs = findFileTabs(container);
+        return tabs.getTitleAt(tabs.getSelectedIndex());
     }
 
     private static List<String> tabTitles(Container container) {

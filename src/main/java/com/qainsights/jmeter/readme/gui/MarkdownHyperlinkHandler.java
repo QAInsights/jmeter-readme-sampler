@@ -31,13 +31,17 @@ final class MarkdownHyperlinkHandler {
         }
     }
 
-    private static void navigate(Component parent, String href) {
+    static String nodeName(String href) {
         String encodedName = href.substring(JMeterProtocolHandler.PROTOCOL.length());
-        String name = URLDecoder.decode(encodedName, StandardCharsets.UTF_8);
+        return URLDecoder.decode(encodedName, StandardCharsets.UTF_8);
+    }
+
+    private static void navigate(Component parent, String href) {
+        String name = nodeName(href);
         if (!JMeterProtocolHandler.navigate(name)) {
             JOptionPane.showMessageDialog(
                     SwingUtilities.getWindowAncestor(parent),
-                    "Node not found: " + encodedName,
+                    "Node not found: " + name,
                     "Markdown link",
                     JOptionPane.WARNING_MESSAGE);
         }
@@ -48,8 +52,12 @@ final class MarkdownHyperlinkHandler {
             return;
         }
         try {
+            Desktop desktop = Desktop.getDesktop();
+            if (!desktop.isSupported(Desktop.Action.BROWSE)) {
+                return;
+            }
             URI uri = event.getURL() != null ? event.getURL().toURI() : URI.create(href);
-            Desktop.getDesktop().browse(uri);
+            desktop.browse(uri);
         } catch (Exception ignored) {
         }
     }

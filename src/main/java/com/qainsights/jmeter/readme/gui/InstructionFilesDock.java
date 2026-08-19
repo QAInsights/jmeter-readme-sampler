@@ -12,6 +12,7 @@ public class InstructionFilesDock {
 
     private Container contentPane;
     private Component mainComponent;
+    private Object originalConstraint;
     private JSplitPane splitPane;
 
     public void show(Container contentPane, JComponent filesPanel) {
@@ -24,13 +25,14 @@ public class InstructionFilesDock {
         }
         this.contentPane = contentPane;
         mainComponent = center;
+        originalConstraint = findLayoutConstraint(contentPane, center);
         contentPane.remove(center);
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, center, filesPanel);
         splitPane.setResizeWeight(0.68);
         splitPane.setOneTouchExpandable(true);
         splitPane.setContinuousLayout(true);
         splitPane.setBorder(null);
-        contentPane.add(splitPane, BorderLayout.CENTER);
+        addAtOriginalConstraint(splitPane);
         contentPane.revalidate();
         contentPane.repaint();
         JSplitPane displayedSplitPane = splitPane;
@@ -46,16 +48,32 @@ public class InstructionFilesDock {
             return;
         }
         contentPane.remove(splitPane);
-        contentPane.add(mainComponent, BorderLayout.CENTER);
+        addAtOriginalConstraint(mainComponent);
         contentPane.revalidate();
         contentPane.repaint();
         contentPane = null;
         mainComponent = null;
+        originalConstraint = null;
         splitPane = null;
     }
 
     public boolean isShowing() {
         return contentPane != null && splitPane != null && splitPane.getParent() == contentPane;
+    }
+
+    private void addAtOriginalConstraint(Component component) {
+        if (originalConstraint == null) {
+            contentPane.add(component);
+        } else {
+            contentPane.add(component, originalConstraint);
+        }
+    }
+
+    private Object findLayoutConstraint(Container container, Component component) {
+        if (container.getLayout() instanceof BorderLayout borderLayout) {
+            return borderLayout.getConstraints(component);
+        }
+        return null;
     }
 
     private Component findCenterComponent(Container contentPane) {

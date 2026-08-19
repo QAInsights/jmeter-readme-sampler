@@ -142,6 +142,7 @@ public class InstructionFilesPanel extends JPanel {
         try {
             creator.create(kind);
             refreshFiles(true);
+            selectFile(kind);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -149,6 +150,16 @@ public class InstructionFilesPanel extends JPanel {
 
     public void dispose() {
         editors.clear();
+    }
+
+    private void selectFile(InstructionFileKind kind) {
+        String prefix = kind.fileName() + " — ";
+        for (int i = 0; i < tabs.getTabCount(); i++) {
+            if (tabs.getTitleAt(i).startsWith(prefix)) {
+                tabs.setSelectedIndex(i);
+                return;
+            }
+        }
     }
 
     private void addFileTab(DetectedInstructionFile file, Component component) {
