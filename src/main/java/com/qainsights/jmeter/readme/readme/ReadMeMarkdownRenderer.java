@@ -3,7 +3,7 @@ import org.commonmark.Extension;
 import org.commonmark.ext.gfm.strikethrough.StrikethroughExtension;
 import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.ext.task.list.items.TaskListItemsExtension;
-import org.commonmark.node.*;
+import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.slf4j.Logger;
@@ -56,14 +56,6 @@ public class ReadMeMarkdownRenderer {
         logger.debug("Markdown parsed successfully");
         HtmlRenderer renderer = HtmlRenderer.builder().extensions(extensions).build();
         String bodyHtml = renderer.render(document);
-        int tableIdx = bodyHtml.indexOf("<table");
-        if (tableIdx >= 0) {
-            int endIdx = bodyHtml.indexOf("</table>", tableIdx);
-            logger.debug("Table HTML found at index {}: {}", tableIdx,
-                    endIdx >= 0 ? bodyHtml.substring(tableIdx, endIdx + 8) : bodyHtml.substring(tableIdx));
-        } else {
-            logger.debug("NO <table> tag found in generated HTML. Full body HTML:\n{}", bodyHtml);
-        }
 
         bodyHtml = bodyHtml
                 .replace("<table>", "<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\">")
@@ -75,13 +67,6 @@ public class ReadMeMarkdownRenderer {
                 .replace("</thead>", "")
                 .replace("<tbody>", "")
                 .replace("</tbody>", "");
-        int transformedTableIdx = bodyHtml.indexOf("<table");
-        if (transformedTableIdx >= 0) {
-            int transformedEndIdx = bodyHtml.indexOf("</table>", transformedTableIdx);
-            logger.debug("Transformed table HTML: {}", transformedEndIdx >= 0
-                    ? bodyHtml.substring(transformedTableIdx, transformedEndIdx + 8)
-                    : bodyHtml.substring(transformedTableIdx));
-        }
 
         String html = "<html><head>" + GITHUB_CSS + "</head><body>" + bodyHtml + "</body></html>";
         logger.debug("Markdown rendered to HTML, output length: {}", html.length());

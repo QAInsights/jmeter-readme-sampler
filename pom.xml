@@ -6,7 +6,7 @@
 
     <groupId>com.qainsights</groupId>
     <artifactId>readme-config-element</artifactId>
-    <version>0.0.1</version>
+    <version>0.1.0</version>
 
     <name>ReadMe Config Element</name>
     <description>A JMeter config element that renders markdown within test plans, with hyperlink navigation for step-by-step manual test execution.</description>

@@ -5,7 +5,8 @@ import org.apache.jmeter.gui.GuiPackage;
 import org.apache.jmeter.gui.tree.JMeterTreeModel;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
 
-import javax.swing.*;
+import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.tree.TreePath;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;

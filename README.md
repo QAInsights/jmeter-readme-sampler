@@ -60,7 +60,7 @@ The `maven-antrun-plugin` copies the fat-jar to `$JMETER_HOME/lib/ext` automatic
 
 ```bash
 mvn clean package
-cp target/readme-config-element-0.0.1-jar-with-dependencies.jar $JMETER_HOME/lib/ext/
+cp target/readme-config-element-0.1.0-jar-with-dependencies.jar $JMETER_HOME/lib/ext/
 ```
 
 Restart JMeter after copying.
@@ -84,12 +84,24 @@ See the [Login Request](jmeter://Login%20Request) sampler for details.
 Clicking the link in Preview selects the node named `Login Request` in the tree.  
 A warning dialog is shown if the node cannot be found.
 
+### Editing CLAUDE.md and AGENTS.md
+
+Open **Options → Show CLAUDE.md / AGENTS.md** to edit project instruction files without leaving JMeter.
+
+The panel detects both filenames from:
+
+1. The directory containing the saved `.jmx` file
+2. The nearest Git root
+3. `$JMETER_HOME/bin`
+
+Each detected file appears in its own tab with its resolved path and source. The editor provides Write and Preview modes, persistent word wrapping, safe Save/Reload/Revert actions, and explicit creation of missing files. Changes are written to the actual Markdown files rather than copied into the `.jmx`; external modifications are detected before saving.
+
 ---
 
 ## Building
 
 ```bash
-mvn clean package          # produces target/readme-Config Element-0.0.1-jar-with-dependencies.jar
+mvn clean package          # produces target/readme-config-element-0.1.0-jar-with-dependencies.jar
 mvn test                   # runs JUnit 5 unit tests
 ```
 

@@ -1,6 +1,5 @@
 package com.qainsights.jmeter.readme.gui;
 
-import com.qainsights.jmeter.readme.protocol.JMeterProtocolHandler;
 import com.qainsights.jmeter.readme.readme.ReadMeConfigElement;
 import com.qainsights.jmeter.readme.readme.ReadMeMarkdownRenderer;
 import org.apache.jmeter.config.gui.AbstractConfigGui;
@@ -8,13 +7,21 @@ import org.apache.jmeter.testelement.TestElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import javax.swing.event.HyperlinkEvent;
+import javax.swing.JEditorPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
+import javax.swing.JViewport;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
-import java.awt.*;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Point;
 
 public class ReadMeConfigElementGui extends AbstractConfigGui {
 
@@ -44,28 +51,49 @@ public class ReadMeConfigElementGui extends AbstractConfigGui {
         logger.debug("Setting up GUI layout");
         setLayout(new BorderLayout());
         setBorder(makeBorder());
-
         // Title
         add(makeTitlePanel(), BorderLayout.NORTH);
+        add(createEditorTabs(), BorderLayout.CENTER);
+    }
 
+    private JTabbedPane createEditorTabs() {
         // Tabbed pane: Write | Preview (GitHub-style)
-        JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.setTabPlacement(JTabbedPane.TOP);
+        JTabbedPane tabs = new JTabbedPane();
+        tabs.setTabPlacement(JTabbedPane.TOP);
+        tabs.addTab("Write", createWriteScrollPane());
+        tabs.addTab("Preview", createPreviewScrollPane());
+        tabs.addChangeListener(e -> {
+            if (tabs.getSelectedIndex() == 1) {
+                doRender();
+            }
+        });
+        return tabs;
+    }
 
+    private JScrollPane createWriteScrollPane() {
         // Write tab: markdown editor
         markdownInput.setFont(new Font("Monospaced", Font.PLAIN, 13));
         markdownInput.setLineWrap(false);
         debounceTimer = new Timer(300, e -> doRender());
         debounceTimer.setRepeats(false);
-        markdownInput.getDocument().addDocumentListener(new SimpleDocumentListener(
-                debounceTimer::restart
-        ));
-        JScrollPane writeScroll = new JScrollPane(markdownInput);
-        writeScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        writeScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        tabbedPane.addTab("Write", writeScroll);
+        markdownInput.getDocument().addDocumentListener(
+                new SimpleDocumentListener(debounceTimer::restart));
+        JScrollPane scroll = new JScrollPane(markdownInput);
+        scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        return scroll;
+    }
 
+    private JScrollPane createPreviewScrollPane() {
         // Preview tab: HTML preview
+        configurePreviewPane();
+        previewScroll = new JScrollPane(previewPane);
+        previewScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        previewScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        return previewScroll;
+    }
+
+    private void configurePreviewPane() {
         HTMLEditorKit kit = new HTMLEditorKit();
         StyleSheet styleSheet = kit.getStyleSheet();
         styleSheet.addRule("body { margin: 0; padding: 0; }");
@@ -76,19 +104,7 @@ public class ReadMeConfigElementGui extends AbstractConfigGui {
         previewPane.setEditable(false);
         previewPane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
         previewPane.setBackground(Color.WHITE);
-        previewPane.addHyperlinkListener(this::onHyperlinkClick);
-        previewScroll = new JScrollPane(previewPane);
-        previewScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        previewScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        tabbedPane.addTab("Preview", previewScroll);
-
-        tabbedPane.addChangeListener(e -> {
-            if (tabbedPane.getSelectedIndex() == 1) {
-                doRender();
-            }
-        });
-
-        add(tabbedPane, BorderLayout.CENTER);
+        previewPane.addHyperlinkListener(event -> MarkdownHyperlinkHandler.handle(this, event));
     }
 
     @Override
@@ -103,36 +119,6 @@ public class ReadMeConfigElementGui extends AbstractConfigGui {
         }
         d.height = 600;
         return d;
-    }
-
-    private void onHyperlinkClick(HyperlinkEvent e) {
-        if (e.getEventType() != HyperlinkEvent.EventType.ACTIVATED) return;
-
-        String href = e.getURL() != null
-                ? e.getURL().toString()
-                : e.getDescription();
-
-        if (href == null) return;
-
-        if (href.startsWith(JMeterProtocolHandler.PROTOCOL)) {
-            // Navigate JMeter tree
-            String name = URLDecoder.decode(
-                    href.substring(JMeterProtocolHandler.PROTOCOL.length()),
-                    StandardCharsets.UTF_8);
-            boolean found = JMeterProtocolHandler.navigate(name);
-            if (!found) {
-                JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(this),
-                        "Node not found: " + href.substring(JMeterProtocolHandler.PROTOCOL.length()),
-                        "README Config Element", JOptionPane.WARNING_MESSAGE);
-            }
-        } else {
-            // Open external links in system browser
-            try {
-                Desktop.getDesktop().browse(e.getURL().toURI());
-            } catch (Exception ex) {
-                // silently ignore
-            }
-        }
     }
 
     private void doRender() {
@@ -186,20 +172,5 @@ public class ReadMeConfigElementGui extends AbstractConfigGui {
         modifyTestElement(readMeConfigElement);
         logger.debug("Test element created and modified");
         return readMeConfigElement;
-    }
-
-    @Override
-    public TestElement makeTestElement() {
-        return super.makeTestElement();
-    }
-
-    @Override
-    public void assignDefaultValues(TestElement element) {
-        super.assignDefaultValues(element);
-    }
-
-    @Override
-    public boolean canBeAdded() {
-        return super.canBeAdded();
     }
 }
