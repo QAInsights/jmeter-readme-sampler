@@ -3,6 +3,14 @@
 > A JMeter Config Element that lets you embed **Markdown documentation** directly inside your test plan  with a live GitHub-style preview and deep-link navigation to tree nodes.
 
 ## Screenshots
+
+### CLAUDE.md and AGENTS.md editor
+
+![Docked CLAUDE.md and AGENTS.md editor](./images/InstructionFilesEditor.png)
+![Options menu entry for the instruction file editor](./images/InstructionFilesMenu.png)
+
+### README Config Element
+
 ![Preview](./images/MarkdownPreview.png)
 ![Markdown](./images/Markdown.png)
 ![JMeter Deep Link](./images/JMeterDeeplink.png)
